@@ -7,6 +7,11 @@
 #include <string>
 #include <iostream>
 
+enum ProgressComparison
+{
+	MORE, LESS, EQUAL, DISABLED
+};
+
 struct ClickTarget
 {
 	ClickTarget(Birb::Rect click_area, std::string new_frame)
@@ -14,6 +19,33 @@ struct ClickTarget
 
 	Birb::Rect area;
 	std::string new_frame;
+
+	int progress_requirement = 0;
+	ProgressComparison comparison = DISABLED;
+
+	bool valid_progress(int progress)
+	{
+		switch (comparison)
+		{
+			case (MORE):
+				return (progress > progress_requirement);
+				break;
+
+			case (LESS):
+				return (progress < progress_requirement);
+				break;
+
+			case (EQUAL):
+				return (progress == progress_requirement);
+				break;
+
+			case (DISABLED):
+				return true;
+				break;
+		};
+
+		return true;
+	}
 };
 
 struct DialogueEntry
@@ -32,7 +64,7 @@ struct Frame
 	:name(name), step_mapping(stepframe_mapping), has_step_frames(has_step_frames)
 	{
 		textures[0].LoadTexture("frames/" + name);
-		std::cout << "Loading frame: " << name << std::endl;
+		//std::cout << "Loading frame: " << name << std::endl;
 
 		if (has_step_frames)
 		{
@@ -91,6 +123,23 @@ struct Frame
 	/* Dilogue text system */
 	size_t current_dialogue = 0;
 	std::vector<DialogueEntry> dialogue_text;
+
+	/* Change neighbor music volume depending on the distance */
+	/* 1: Next to the neighbor, full volume (peaking at the volume set in settings) */
+	/* ... decimal values in between */
+	/* 0: The furthest distance from the neighbor, really low volume */
+	float distance_from_neighbor = 0.0f;
 };
 
 void LoadFrames(std::unordered_map<std::string, Frame>& frame_map);
+
+inline std::vector<std::string> random_dialogue_strings = {
+	"Thinking about yawning makes me yawn a lot",
+	"Why are my eyes so dry...",
+	"Why can't my neighbor just party during daytime",
+	"I forgot already why I even moved to this place",
+	"My neighbor is so weird...\nHe doesn't even collect pipes!",
+	"My neighbor keeps calling me weird...\nAnd who is the one now listening to TikTok\ncompilations with loudspeakers?",
+	"Delivering pipes to people has been a long-standing\nfavorite activity of mine",
+	"High quality pipes are really difficult to come\nby these days",
+};

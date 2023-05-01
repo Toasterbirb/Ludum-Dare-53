@@ -10,6 +10,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Inside of the tent */
 	Frame inside_tent("tent_inside.jpg");
+	inside_tent.distance_from_neighbor = 0.1f;
 
 	ClickTarget go_outside_of_tent(Rect(565, 140, 410, 587), "tent_outside.jpg");
 	inside_tent.click_targets.push_back(go_outside_of_tent);
@@ -33,6 +34,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Outside of the tent right in front of it */
 	Frame outside_tent("tent_outside.jpg");
+	outside_tent.distance_from_neighbor = 0.2f;
 
 	ClickTarget go_to_shed_front_lawn(Rect(600, 64, 342, 359), "shed_front_lawn.jpg");
 	outside_tent.click_targets.push_back(go_to_shed_front_lawn);
@@ -51,6 +53,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Front lawn of the shed */
 	Frame shed_front_lawn("shed_front_lawn.jpg");
+	shed_front_lawn.distance_from_neighbor = 0.4;
 
 	ClickTarget go_back_to_tent_front(Rect(1366, 232, 226, 592), "tent_outside.jpg");
 	shed_front_lawn.click_targets.push_back(go_back_to_tent_front);
@@ -66,6 +69,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Shed front door (outside) */
 	Frame shed_front_door_outside("shed_front_door_outside.jpg");
+	shed_front_door_outside.distance_from_neighbor = 0.35f;
 
 	ClickTarget go_back_to_shed_front_lawn(Rect(1250, 52, 338, 755), "shed_front_lawn.jpg");
 	shed_front_door_outside.click_targets.push_back(go_back_to_shed_front_lawn);
@@ -78,6 +82,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Shed front door (inside) */
 	Frame shed_front_door_inside("shed_front_door_inside.jpg", true);
+	shed_front_door_inside.distance_from_neighbor = 0.10f;
 
 	ClickTarget go_back_to_shed_frontdoor_outside(Rect(4, 299, 158, 579), "shed_front_door_outside.jpg");
 	shed_front_door_inside.click_targets.push_back(go_back_to_shed_frontdoor_outside);
@@ -99,6 +104,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Shed crafting table main view */
 	Frame shed_crafting_table_main_view("shed_crafting_table_main_view.jpg", true);
+	shed_crafting_table_main_view.distance_from_neighbor = 0.1;
 
 	ClickTarget go_to_gunpowder_corner(Rect(1269, 178, 329, 488), "shed_gunpowder_box_corner.jpg");
 	shed_crafting_table_main_view.click_targets.push_back(go_to_gunpowder_corner);
@@ -109,11 +115,32 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 	ClickTarget go_to_brass_cap_cabinet(Rect(452, 497, 175, 177), "shed_crafting_table_brass_cap_cabinet.jpg");
 	shed_crafting_table_main_view.click_targets.push_back(go_to_brass_cap_cabinet);
 
+	ClickTarget assemble_the_pipe(Rect(476, 235, 711, 255), "assembled_pipe.jpg");
+	assemble_the_pipe.progress_requirement = 4;
+	assemble_the_pipe.comparison = EQUAL;
+	shed_crafting_table_main_view.click_targets.push_back(assemble_the_pipe);
+
 	frames_to_load.push_back(shed_crafting_table_main_view);
+
+	/* Glorious assembled pipe */
+	Frame assembled_pipe("assembled_pipe.jpg");
+	assembled_pipe.distance_from_neighbor = 0.1;
+
+	ClickTarget start_the_delivery(Rect(0, 0, 1600, 900), "shed_gate_view.jpg");
+	assembled_pipe.click_targets.push_back(start_the_delivery);
+
+	DialogueEntry assembled_pipe_dialogue;
+	assembled_pipe_dialogue.dialogue.push_back("Now THIS is what a nice pipe looks like!");
+	assembled_pipe_dialogue.dialogue.push_back("Lets deliver it to our neighbors mailbox :)");
+	assembled_pipe_dialogue.step_incrementing_dialogue = true;
+	assembled_pipe.dialogue_text.push_back(assembled_pipe_dialogue);
+
+	frames_to_load.push_back(assembled_pipe);
 
 
 	/* Shed crafting table brass cap cabinet */
 	Frame shed_crafting_table_brass_cap_cabinet("shed_crafting_table_brass_cap_cabinet.jpg");
+	shed_crafting_table_brass_cap_cabinet.distance_from_neighbor = 0.1;
 
 	ClickTarget go_back_to_shed_crafting_table_from_brass_caps(Rect(1, 1, 352, 897), "shed_crafting_table_main_view.jpg");
 	shed_crafting_table_brass_cap_cabinet.click_targets.push_back(go_back_to_shed_crafting_table_from_brass_caps);
@@ -132,6 +159,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Pipe collection */
 	Frame shed_pipe_collection("shed_pipe_collection.jpg");
+	shed_pipe_collection.distance_from_neighbor = 0.1;
 
 	ClickTarget return_to_shed_front_door_from_pipe_collection(Rect(3, 4, 294, 874), "shed_front_door_inside.jpg");
 	shed_pipe_collection.click_targets.push_back(return_to_shed_front_door_from_pipe_collection);
@@ -148,6 +176,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Gunpowder corner */
 	Frame shed_gunpowder_box_corner("shed_gunpowder_box_corner.jpg", true, {0, 0, 1, 1, 1});
+	shed_gunpowder_box_corner.distance_from_neighbor = 0.1;
 
 	ClickTarget return_to_shed_crafting_table_from_gunpowder(Rect(8, 8, 330, 884), "shed_crafting_table_main_view.jpg");
 	shed_gunpowder_box_corner.click_targets.push_back(return_to_shed_crafting_table_from_gunpowder);
@@ -164,6 +193,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Shed front lawn road gate place thingie */
 	Frame shed_gate_view("shed_gate_view.jpg");
+	shed_gate_view.distance_from_neighbor = 0.45;
 
 	ClickTarget go_to_first_roadstep_from_shed(Rect(545, 285, 535, 603), "first_road_step_from_shed.jpg");
 	shed_gate_view.click_targets.push_back(go_to_first_roadstep_from_shed);
@@ -173,11 +203,16 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* First road step from shed */
 	Frame first_road_step_from_shed("first_road_step_from_shed.jpg");
+	first_road_step_from_shed.distance_from_neighbor = 0.55;
 
 	ClickTarget return_back_to_shed_from_first_roadstep_1(Rect(4, 139, 299, 758), "look_back_at_shed_from_first_roadstep.jpg");
+	return_back_to_shed_from_first_roadstep_1.comparison = LESS;
+	return_back_to_shed_from_first_roadstep_1.progress_requirement = 5;
 	first_road_step_from_shed.click_targets.push_back(return_back_to_shed_from_first_roadstep_1);
 
 	ClickTarget return_back_to_shed_from_first_roadstep_2(Rect(1268, 167, 328, 725), "look_back_at_shed_from_first_roadstep.jpg");
+	return_back_to_shed_from_first_roadstep_2.comparison = LESS;
+	return_back_to_shed_from_first_roadstep_2.progress_requirement = 5;
 	first_road_step_from_shed.click_targets.push_back(return_back_to_shed_from_first_roadstep_2);
 
 	ClickTarget go_to_second_road_step_from_shed(Rect(422, 310, 725, 417), "second_road_step_from_shed.jpg");
@@ -188,6 +223,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Second road step from the shed */
 	Frame second_road_step_from_shed("second_road_step_from_shed.jpg");
+	second_road_step_from_shed.distance_from_neighbor = 0.7;
 
 	ClickTarget go_to_third_road_step_from_shed(Rect(426, 301, 657, 389), "third_road_step_from_shed.jpg");
 	second_road_step_from_shed.click_targets.push_back(go_to_third_road_step_from_shed);
@@ -197,11 +233,14 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Third road step from the shed */
 	Frame third_road_step_from_shed("third_road_step_from_shed.jpg");
+	third_road_step_from_shed.distance_from_neighbor = 0.85;
 
 	ClickTarget go_to_empty_mailbox_closeup(Rect(507, 279, 448, 450), "mailbox_closeup_empty.jpg");
 	third_road_step_from_shed.click_targets.push_back(go_to_empty_mailbox_closeup);
 
 	ClickTarget start_returning_back_to_shed(Rect(13, 66, 295, 819), "first_return_from_neighbor.jpg");
+	start_returning_back_to_shed.comparison = LESS;
+	start_returning_back_to_shed.progress_requirement = 5;
 	third_road_step_from_shed.click_targets.push_back(start_returning_back_to_shed);
 
 	frames_to_load.push_back(third_road_step_from_shed);
@@ -209,15 +248,49 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Empty mailbox closeup */
 	Frame empty_mailbox_closeup("mailbox_closeup_empty.jpg");
+	empty_mailbox_closeup.distance_from_neighbor = 1.0;
 
 	ClickTarget return_back_from_mailbox_closeup(Rect(9, 19, 346, 862), "third_road_step_from_shed.jpg");
 	empty_mailbox_closeup.click_targets.push_back(return_back_from_mailbox_closeup);
 
+	ClickTarget insert_pipe_to_mailbox(Rect(686, 114, 439, 476), "pipe_in_open_mailbox.jpg");
+	insert_pipe_to_mailbox.progress_requirement = 5;
+	insert_pipe_to_mailbox.comparison = EQUAL;
+	empty_mailbox_closeup.click_targets.push_back(insert_pipe_to_mailbox);
+
 	frames_to_load.push_back(empty_mailbox_closeup);
+
+
+	/* Open mailbox with a pipe inside of it */
+	Frame open_mailbox_with_pipe_in_it("pipe_in_open_mailbox.jpg");
+	open_mailbox_with_pipe_in_it.distance_from_neighbor = 1.0;
+
+	DialogueEntry pipe_mailbox_dialogue;
+	pipe_mailbox_dialogue.dialogue.push_back("This will be the delivery of a lifetime");
+	pipe_mailbox_dialogue.dialogue.push_back("Lets close up the mailbox and return back to bed");
+	open_mailbox_with_pipe_in_it.dialogue_text.push_back(pipe_mailbox_dialogue);
+
+	ClickTarget close_mailbox(Rect(663, 198, 514, 557), "pipe_in_closed_mailbox.jpg");
+	open_mailbox_with_pipe_in_it.click_targets.push_back(close_mailbox);
+
+	frames_to_load.push_back(open_mailbox_with_pipe_in_it);
+
+
+	/* Closed mailbox with a pipe inside of it */
+	Frame closed_mailbox_with_pipe_in_it("pipe_in_closed_mailbox.jpg");
+	closed_mailbox_with_pipe_in_it.distance_from_neighbor = 1.0;
+
+	DialogueEntry closed_mailbox_dialogue;
+	closed_mailbox_dialogue.step_incrementing_dialogue = true;
+	closed_mailbox_dialogue.dialogue.push_back("Alrighty, the problem should solve itself\nfrom here on out");
+	closed_mailbox_with_pipe_in_it.dialogue_text.push_back(closed_mailbox_dialogue);
+
+	frames_to_load.push_back(closed_mailbox_with_pipe_in_it);
 
 
 	/* Look back at the shed from first road step */
 	Frame look_back_at_shed_from_first_roadstep("look_back_at_shed_from_first_roadstep.jpg");
+	look_back_at_shed_from_first_roadstep.distance_from_neighbor = 0.45;
 
 	ClickTarget return_back_to_shed_front_lawn_from_road(Rect(466, 185, 661, 679), "shed_front_lawn.jpg");
 	look_back_at_shed_from_first_roadstep.click_targets.push_back(return_back_to_shed_front_lawn_from_road);
@@ -227,6 +300,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* First step when returning back to the shed from neighbor */
 	Frame first_return_from_neighbor("first_return_from_neighbor.jpg");
+	first_return_from_neighbor.distance_from_neighbor = 0.7;
 
 	ClickTarget return_back_to_shed_2(Rect(694, 393, 571, 340), "second_return_from_neighbor.jpg");
 	first_return_from_neighbor.click_targets.push_back(return_back_to_shed_2);
@@ -236,6 +310,7 @@ void LoadFrames(std::unordered_map<std::string, Frame>& frame_map)
 
 	/* Second step from neighbor back to the shed */
 	Frame second_return_from_neighbor("second_return_from_neighbor.jpg");
+	second_return_from_neighbor.distance_from_neighbor = 0.6;
 
 	ClickTarget return_to_shed_gate_from_neighbor(Rect(588, 374, 317, 252), "look_back_at_shed_from_first_roadstep.jpg");
 	second_return_from_neighbor.click_targets.push_back(return_to_shed_gate_from_neighbor);

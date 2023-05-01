@@ -29,6 +29,14 @@ Entity::Image* current_frame_entity;
 Frame* current_frame;
 Scene scene;
 
+Rect end_fade(0, 0, 1600, 900, Colors::Nord::PolarNight::nord0);
+float end_fade_timer = 0.0f;
+bool neighbor_blown_up = false;
+Audio::SoundFile explosion("boom.wav");
+Entity::Text credits_text;
+Font* credits_font;
+const int credits_scroll_speed = 40;
+
 /* Game progression */
 /* 0: No progress has been made yet
  * 1: Steel pipe
@@ -47,10 +55,17 @@ Scene dialogue_box_scene;
 Rect dialogue_background(400, 600, 800, 180, Colors::Nord::PolarNight::nord1);
 Entity::Text dialogue_text_entity;
 Font* dialogue_font;
+bool dialogue_was_shown_during_this_frame = false;
 
 Entity::Text dialogue_tutorial;
 int dialogue_tutorial_counter = 0;
 int dialogue_tutorial_max_count = 1;
+int random_dialogue_chance = 20; /* The higher the number, the smaller the chance */
+bool is_random_dialogue = false;
+
+/* Music */
+Audio::MusicFile background_music("ukkonooa.wav");
+float max_volume = 0.0f;
 
 /* Set this to true in the input() func if the user clicks */
 bool click_queued = false;
@@ -107,6 +122,9 @@ void SetCustomCursorStatus(bool status)
 void UpdateCurrentFrameEntity()
 {
 	current_frame_entity->sprite = current_frame->get_texture(step);
+
+	/* Set the volume level accordingly */
+	Audio::SetGlobalVolume(max_volume * current_frame->distance_from_neighbor);
 }
 
 /* start() is called before the game loop starts.
@@ -118,10 +136,16 @@ void start(Game& game)
 		SDL_SetWindowFullscreen(game.window->win, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
 	MainMenuSettings main_menu_settings;
-	main_menu_settings.title.text = "How to silence a neighbor";
+	Texture menu_background_texture("start.jpg");
+	main_menu_settings.background_texture = menu_background_texture;
+	main_menu_settings.credits_menu.credits_text = "This game was made by ToasterBirb\nfor Ludum Dare 53 in about 48 hours";
+	main_menu_settings.title.text = "Silence is just a pipe dream";
 
 	MainMenu main_menu(game, main_menu_settings);
 	main_menu.Launch();
+
+	/* Get the peak music volume */
+	max_volume = Audio::GetCurrentGlobalVolume();
 
 	/* Start loading in game resources */
 	LoadFrames(frames);
@@ -170,6 +194,82 @@ void start(Game& game)
 
 	/* Enable alpha blendering for that sweet sweet transparency */
 	Render::AlphaBlendingToggle(true);
+
+	/* Setup some annoying background music */
+	background_music.play(true);
+
+	/* Setup the end fade screen */
+	end_fade.color.a = 0;
+	end_fade.renderingPriority = 12;
+	scene.AddObject(end_fade);
+
+	credits_font = new Font("birb2d_res/fonts/freefont/FreeMonoBold.ttf", 44);
+
+	const std::string credits_text_string =
+R"~~(The pipe was incredibly effective
+
+In fact, it was so effective, that
+the neighbor stopped going outside
+
+I haven't seen him for weeks...
+
+
+Also, some weird people visited me
+yesterday. They were wearing dark
+clothes and sun glasses.
+
+They blabbed amount something something
+improvised explosive device bla bla...
+
+I didn't have time for their monologue,
+so I simply handed them a backpack containing
+one of my finest pipes and closed the door.
+
+
+I heard some frantic shouting and a nice little
+thud. The silence returned once again.
+
+
+
+All nice things in life are simply pipe dreams,
+so why not use pipes to achieve them :)
+
+
+
+
+THE END
+
+
+No actual pipebombs were created during the
+making of this video game.
+
+Please don't make one yourself. You'll just
+achieve a spot on a watchlist, get a long holiday
+behind long metal pipes and possibly hurt
+yourself.
+
+
+
+HOWEVER if you need to research the topic
+for whatever reason (I'm not judging),
+this https://en.wikipedia.org/wiki/Pipe_bomb
+wikipedia page contains some information.
+
+
+THE ACTUAL END
+
+
+
+Have you checked your mailbox today?
+
+
+(in minecraft)
+)~~";
+
+	credits_text.Construct(credits_text_string,
+			Vector2Int(200, 900), credits_font, Colors::Nord::SnowStorm::nord4);
+	credits_text.renderingPriority = 13;
+	scene.AddObject(credits_text);
 }
 
 /* input() is called at the beginning of the frame
@@ -185,12 +285,12 @@ void input(Game& game)
 	if (game.window->isMouseDown())
 		click_queued = true;
 
-	if (game.window->isKeyDown() && Input::EventToKeycode(*game.event) == Input::J)
-	{
-		std::cout << "Forcing tent" << std::endl;
-		current_frame = &frames["tent_inside.jpg"];
-		UpdateCurrentFrameEntity();
-	}
+	//if (game.window->isKeyDown() && Input::EventToKeycode(*game.event) == Input::J)
+	//{
+	//	std::cout << "Forcing tent" << std::endl;
+	//	current_frame = &frames["tent_inside.jpg"];
+	//	UpdateCurrentFrameEntity();
+	//}
 }
 
 
@@ -201,20 +301,20 @@ void input(Game& game)
 void update(Game& game)
 {
 	/* Area selection debugging */
-	if (drag_controller.isDragging())
-	{
-		drag_rect.x = drag_controller.startPos().x;
-		drag_rect.y = drag_controller.startPos().y;
-		drag_rect.w = drag_controller.endPos().x - drag_controller.startPos().x;
-		drag_rect.h = drag_controller.endPos().y - drag_controller.startPos().y;
-		drag_result_printed = false;
-	}
-	else if (!drag_result_printed)
-	{
-		if (drag_rect.w > 1 || drag_rect.h > 1 || drag_rect.w < -1 || drag_rect.h < -1)
-			std::cout << drag_rect << std::endl;
-		drag_result_printed = true;
-	}
+	//if (drag_controller.isDragging())
+	//{
+	//	drag_rect.x = drag_controller.startPos().x;
+	//	drag_rect.y = drag_controller.startPos().y;
+	//	drag_rect.w = drag_controller.endPos().x - drag_controller.startPos().x;
+	//	drag_rect.h = drag_controller.endPos().y - drag_controller.startPos().y;
+	//	drag_result_printed = false;
+	//}
+	//else if (!drag_result_printed)
+	//{
+	//	if (drag_rect.w > 1 || drag_rect.h > 1 || drag_rect.w < -1 || drag_rect.h < -1)
+	//		std::cout << drag_rect << std::endl;
+	//	drag_result_printed = true;
+	//}
 
 	/* Check if we need to pop open a dialogue window */
 	if (current_frame->dialogue_text.size() != 0
@@ -232,29 +332,56 @@ void update(Game& game)
 		dialogue_progress = 0;
 		dialogue_text_entity.SetText(current_frame->dialogue_text[current_frame->current_dialogue].dialogue[0]);
 		dialogue_box_scene.Activate();
+		dialogue_was_shown_during_this_frame = true;
+	}
+	/* Attempt launching a "random dialogue" to fill in the empty gaps */
+	else if(Global::random.RandomInt(0, random_dialogue_chance) == 0
+			&& !dialogue_box_scene.isActive()
+			&& !dialogue_was_shown_during_this_frame)
+	{
+		is_random_dialogue = true;
+
+		/* Setup a new dialogue window */
+		dialogue_progress = 0;
+		dialogue_text_entity.SetText(random_dialogue_strings[Global::random.RandomInt(0, random_dialogue_strings.size() - 1)]);
+		dialogue_was_shown_during_this_frame = true;
+		dialogue_box_scene.Activate();
+	}
+	else
+	{
+		/* This prevents the random dialogue from showing up
+		 * with every single frame */
+		dialogue_was_shown_during_this_frame = true;
 	}
 
 	/* Handle dialogue progression */
 	if (click_queued && dialogue_box_scene.isActive())
 	{
 		dialogue_progress++;
-		if (dialogue_progress > current_frame->dialogue_text[current_frame->current_dialogue].dialogue.size() - 1)
+		if (is_random_dialogue || dialogue_progress > current_frame->dialogue_text[current_frame->current_dialogue].dialogue.size() - 1)
 		{
 			/* The dialogue box is over, close it */
-			current_frame->dialogue_text[current_frame->current_dialogue].has_been_displayed = true;
 			dialogue_progress = 0;
 			dialogue_box_scene.Deactivate();
 
-			/* Check if the dialogue should increment game progress */
-			if (current_frame->dialogue_text[current_frame->current_dialogue].step_incrementing_dialogue)
+			/* Avoid progression with random dialogue */
+			if (!is_random_dialogue)
 			{
-				step++;
+				current_frame->dialogue_text[current_frame->current_dialogue].has_been_displayed = true;
 
-				/* Make sure that the current frame is up-to-date */
-				UpdateCurrentFrameEntity();
+				/* Check if the dialogue should increment game progress */
+				if (current_frame->dialogue_text[current_frame->current_dialogue].step_incrementing_dialogue)
+				{
+					step++;
+
+					/* Make sure that the current frame is up-to-date */
+					UpdateCurrentFrameEntity();
+				}
+
+				current_frame->current_dialogue++;
 			}
 
-			current_frame->current_dialogue++;
+			is_random_dialogue = false;
 		}
 		else
 		{
@@ -265,12 +392,16 @@ void update(Game& game)
 	}
 
 	/* Wait until the cursor is on an area that can be clicked */
-	/* Also skip this part if there's a dialogue box open waiting for interaction */
-	if (current_frame->click_targets.size() > 0 && !dialogue_box_scene.isActive())
+	/* Also skip this part if there's a dialogue box open waiting for interaction
+	 * or if the step is equal to 5 (the game is over) */
+	if (current_frame->click_targets.size() > 0 && !dialogue_box_scene.isActive() && step < 6)
 	{
 		for (size_t i = 0; i < current_frame->click_targets.size(); ++i)
 		{
-			if (game.window->CursorInRect(current_frame->click_targets[i].area))
+			/* Allow clicking the area if its progress requirements are matched
+			 * and the cursor is in the correct area */
+			if (game.window->CursorInRect(current_frame->click_targets[i].area)
+					&& current_frame->click_targets[i].valid_progress(step))
 			{
 				/* If the user clicked, go to the "next" frame */
 				if (click_queued)
@@ -279,12 +410,13 @@ void update(Game& game)
 					SetCustomCursorStatus(false);
 
 					click_queued = false;
+					dialogue_was_shown_during_this_frame = false;
 
 					/* Update the frame */
 					current_frame = &frames[current_frame->click_targets[i].new_frame];
 					UpdateCurrentFrameEntity();
 
-					std::cout << "Frame: " << current_frame->name << std::endl;
+					//std::cout << "Frame: " << current_frame->name << std::endl;
 
 					/* Check if the new frame has any click targets
 					 * and spit out a warning if there are zero */
@@ -310,6 +442,44 @@ void update(Game& game)
 	{
 		SetCustomCursorStatus(false);
 	}
+
+	/* If step is equal to 6, start fading the screen to black slowly */
+	if (step == 6)
+	{
+		/* Handle the fadeout */
+		if (end_fade.color.a < 253)
+			end_fade.color.a += 3;
+
+		end_fade_timer += game.time_step()->deltaTime;
+
+		if (end_fade_timer > 2.0f && !neighbor_blown_up)
+		{
+			neighbor_blown_up = true;
+
+			/* Stop the music */
+			Mix_HaltMusic();
+
+			/* Crank up the volume */
+			Audio::SetGlobalVolume(max_volume);
+
+			/* Play the explosion sound */
+			explosion.play();
+		}
+
+		if (end_fade_timer > 5.0f && neighbor_blown_up)
+		{
+			/* Roll the credits */
+			credits_text.rect.y -= game.time_step()->deltaTime * credits_scroll_speed;
+
+			/* If the credts have rolled to the end, close the game */
+			if (credits_text.rect.y < credits_text.rect.h * -1)
+			{
+				explosion.play();
+				SDL_Delay(750);
+				game.application_running = false;
+			}
+		}
+	}
 }
 
 /* render() is called after update() has been finished.
@@ -322,7 +492,7 @@ void render(Game& game)
 	scene.Render();
 
 	/* Render the debugging drag scene */
-	drag_scene.Render();
+	//drag_scene.Render();
 
 	/* Render the custom cursor, whenever its active */
 	cursor_scene.Render();
@@ -347,4 +517,7 @@ void cleanup()
 	delete current_frame_entity;
 	delete custom_cursor;
 	delete dialogue_font;
+	delete credits_font;
+	background_music.free();
+	explosion.free();
 }
